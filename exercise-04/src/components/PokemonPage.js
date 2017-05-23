@@ -1,6 +1,7 @@
 import React from 'react'
 import { withRouter } from 'react-router'
 import { graphql } from 'react-apollo'
+import { filter } from 'graphql-anywhere'
 import gql from 'graphql-tag'
 
 import PokemonCard from './PokemonCard'
@@ -32,7 +33,8 @@ class PokemonPage extends React.Component {
 
     return (
       <div>
-        <PokemonCard pokemon={pokemon} handleCancel={this.goBack}/>
+        <PokemonCardHeader pokemon={filter(PokemonCardHeader.fragments.pokemon, pokemon)} />
+        <PokemonCard pokemon={filter(PokemonCard.fragments.pokemon, pokemon)} handleCancel={this.goBack}/>
       </div>
     )
   }
@@ -42,12 +44,15 @@ class PokemonPage extends React.Component {
   }
 }
 
-const PokemonQuery = gql`query PokemonQuery($id: ID!) {
+const PokemonQuery = gql`
+  query PokemonQuery($id: ID!) {
     Pokemon(id: $id) {
       ... PokemonCardPokemon
+      ... PokemonCardHeaderPokemon
     }
   }
   ${PokemonCard.fragments.pokemon}
+  ${PokemonCardHeader.fragments.pokemon}
 `
 
 const PokemonPageWithData = graphql(PokemonQuery, {
