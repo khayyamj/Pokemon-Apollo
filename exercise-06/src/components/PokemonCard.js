@@ -1,7 +1,7 @@
 import React from 'react'
 import { propType } from 'graphql-anywhere'
 import gql from 'graphql-tag'
-import { graphql } from 'react-apollo'
+import { graphql, compose } from 'react-apollo'
 import styled from 'styled-components'
 
 const Button = styled.div`
@@ -28,6 +28,7 @@ class PokemonCard extends React.Component {
   static fragments = {
     pokemon: gql`
       fragment PokemonCardPokemon on Pokemon {
+        id
         url
         name
       }
@@ -37,6 +38,8 @@ class PokemonCard extends React.Component {
     pokemon: propType(PokemonCard.fragments.pokemon).isRequired,
     handleCancel: React.PropTypes.func.isRequired,
     afterChange: React.PropTypes.func.isRequired,
+    updatePokemon: React.PropTypes.func.isRequired,
+    deletePokemon: React.PropTypes.func.isRequired,
   }
 
   state = {
@@ -82,12 +85,41 @@ class PokemonCard extends React.Component {
   }
 
   handleUpdate = () => {
-
+    this.props.updatePokemon({variables: { id: this.props.pokemon.id, name: this.state.name, url: this.state.url }})
+      .then(this.props.afterChange)
   }
 
   handleDelete = () => {
-
+    this.props.deletePokemon({variables: { id: this.props.pokemon.id }})
+      .then(this.props.afterChange)
   }
 }
 
-export default PokemonCard
+const updatePokemon = gql`
+  mutation updatePokemon($id: ID!, $name: String!, $url: String!) {
+    updatePokemon(id: $id, name: $name, url: $url) {
+      id
+      ... PokemonCardPokemon
+    }
+  }
+  ${PokemonCard.fragments.pokemon}
+`
+
+const deletePokemon = gql`
+  mutation deletePokemon($id: ID!) {
+    deletePokemon(id: $id) {
+      id
+    }
+  }
+`
+
+const PokemonCardWithMutations =  compose(
+  graphql(deletePokemon, {
+    name : 'deletePokemon'
+  }),
+  graphql(updatePokemon, {
+    name: 'updatePokemon'
+  })
+)(PokemonCard)
+
+export default PokemonCardWithMutations

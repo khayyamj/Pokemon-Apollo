@@ -64,7 +64,8 @@ const PokedexWithData = graphql(TrainerQuery, {
   options: {
       variables: {
         name: 'khayyam.jones@gmail.com'
-      }
+      },
+      forceFetch: true,
     }
   }
 )(Pokedex)
