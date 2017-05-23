@@ -34,19 +34,38 @@ class Pokedex extends React.Component {
     return (
       <div className='w-100 bg-light-gray min-vh-100'>
         <Title className='tc pa5'>
-          Hey {this.props.data.Trainer.name}, there are 0 Pokemons in your pokedex
+          Hey {this.props.data.Trainer.name}, there are {this.props.data.Trainer.ownedPokemons.length} Pokemons in your pokedex
         </Title>
+        <div className='flex flex-wrap justify-center center w-75'>
+          {this.props.data.Trainer.ownedPokemons.map((pokemon) =>
+            <PokemonPreview key={pokemon.id} pokemon={pokemon} />
+          )}
+        </div>
       </div>
     )
   }
 }
 
-const TrainerQuery = gql`query TrainerQuery {
-  Trainer(name: "khayyam.jones@gmail.com") {
-    name
+const TrainerQuery = gql`
+  query TrainerQuery($name: String!) {
+    Trainer(name: $name) {
+      id
+      name
+      ownedPokemons {
+        id
+        name
+        url
+      }
+    }
   }
-}`
+`
 
-const PokedexWithData = graphql(TrainerQuery)(Pokedex)
+  const PokedexWithData = graphql(TrainerQuery, {
+    options: {
+      variables: {
+        name: "khayyam.jones@gmail.com"
+      }
+    }
+  })(Pokedex)
 
 export default PokedexWithData

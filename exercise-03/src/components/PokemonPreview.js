@@ -9,10 +9,14 @@ export default class PokemonPreview extends React.Component {
 
   render () {
     return (
-      <div className='link dim grow mw4 bg-white ma2 pa3 shadow-1'>
+      <Link
+        to={`/view/${this.props.pokemon.id}`}
+        style={{ minWidth: 200 }}
+        className='link dim grow mw4 bg-white ma2 pa3 shadow-1'
+      >
         <img src={this.props.pokemon.url} alt={this.props.pokemon.name} />
         <div className='gray tc'>{this.props.pokemon.name}</div>
-      </div>
+      </Link>
     )
   }
 }
