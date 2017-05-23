@@ -27,6 +27,16 @@ class Pokedex extends React.Component {
     router: React.PropTypes.object.isRequired,
   }
 
+  componentWillReceiveProps({ router, data: { Trainer }, params: { page } }) {
+    if (!Trainer) {
+      return
+    }
+    const pokemonCount = Trainer._ownedPokemonsMeta.count
+    if ((!pokemonCount && !this._isFirstPage()) || isNaN(page) || pokemonCount < (page - 1) * POKEMONS_PER_PAGE || page < 1) {
+      router.replace('/1')
+    }
+  }
+
   _nextPage = () => {
     this.props.router.replace(`/${+this.props.params.page + 1}`)
   }
@@ -56,42 +66,51 @@ class Pokedex extends React.Component {
     return (
       <div className='w-100 bg-light-gray min-vh-100'>
         <Title className='tc pa5'>
-          Hey {this.props.data.Trainer.name}, there are {this.props.data.Trainer.ownedPokemons.length} Pokemons in your pokedex
+          Hey {this.props.data.Trainer.name}, there are {this.props.data.Trainer._ownedPokemonsMeta.count} Pokemons in your pokedex
         </Title>
         <div className='flex flex-wrap justify-center center w-75'>
-          {this._isFirstPage() && <AddPokemonPreview trainerId={this.props.data.Trainer.id} />}
+          {!this._isFirstPage() && <PageNavigation onClick={this._previousPage} isPrevious={true} />}
+          {this.props.params.page === '1' && <AddPokemonPreview trainerId={this.props.data.Trainer.id} />}
           {this.props.data.Trainer.ownedPokemons.map((pokemon) =>
             <PokemonPreview key={pokemon.id} pokemon={pokemon} />
           )}
+          {!this._isLastPage() && <PageNavigation onClick={this._nextPage} isPrevious={false} />}
         </div>
       </div>
     )
   }
 }
 
-const TrainerQuery = gql`query TrainerQuery($name: String!) {
-  Trainer(name: $name) {
-    id
-    name
-    ownedPokemons {
+const TrainerQuery = gql`
+  query TrainerQuery($name: String!, $first: Int!, $skip: Int!) {
+    Trainer(name: $name) {
       id
       name
-      url
-    }
-    _ownedPokemonsMeta {
-      count
+      ownedPokemons(first: $first, skip: $skip) {
+        id
+        name
+        url
+      }
+      _ownedPokemonsMeta {
+        count
+      }
     }
   }
-}`
+`
 
 const PokedexWithData = graphql(TrainerQuery, {
-    options: (ownProps) => ({
-      variables: {
-        name: 'khayyam.jones@gmail.com',
-      },
-      forceFetch: true,
-    })
-  }
-)(withRouter(Pokedex))
+  options: (ownProps) => ({
+    variables: {
+      name: 'khayyam.jones@gmail.com',
+      skip: (
+        ownProps.params &&
+        ownProps.params.page &&
+        (ownProps.params.page - 1) * POKEMONS_PER_PAGE
+      ) || 0,
+      first: POKEMONS_PER_PAGE,
+    },
+    forceFetch: true,
+  })
+})(withRouter(Pokedex))
 
 export default PokedexWithData
